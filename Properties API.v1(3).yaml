@@ -1,0 +1,898 @@
+openapi: 3.0.0
+info:
+  title: Properties API
+  version: '1.0'
+  contact:
+    name: João Antunes
+servers:
+  - url: 'http://sandbox.debtify.com/api/v1/property'
+    description: Sandbox
+paths:
+  '/valuations/{id}/updates':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: valuation id that was previously subscribed to
+    get:
+      summary: Valuation comments/updates
+      tags:
+        - valuation
+      operationId: valuation id
+      description: Gets a list of the updates regarding this valuation
+      parameters:
+        - schema:
+            type: number
+          in: query
+          name: since_id
+          description: Parameter to use for pagination purposes
+        - schema:
+            type: number
+          in: query
+          name: limit
+          description: 'defaults to listing 50 - maximum: 250'
+        - schema:
+            type: string
+            enum:
+              - '>id'
+              - <id
+              - '>created_at'
+              - <created_at
+          in: query
+          name: order_by
+          description: 'field to order by - default `>id` from the bigger  id to the lowest - id is assumed sequential'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1%7Bid%7D~1updates/post/responses/201/content/application~1json/schema'
+    post:
+      summary: Create new valuation comment
+      tags:
+        - valuation
+      operationId: post-valuations-id-comments
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1sales~1%7Bid%7D~1updates/post/responses/201/content/application~1json/schema'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/paths/~1sales~1%7Bid%7D~1updates/post/requestBody/content/application~1json/schema'
+  /valuations/requests:
+    get:
+      summary: Valuation requests
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1requests/get/responses/200/content/application~1json/schema/items'
+      operationId: get-api-v1-valuations
+      description: Gets list of Valuation requests
+      parameters:
+        - schema:
+            type: number
+          in: query
+          name: since_id
+        - schema:
+            type: number
+          in: query
+          name: limit
+        - schema:
+            type: string
+            enum:
+              - '>id'
+              - <id
+              - '>created_at'
+              - <created_at
+          in: query
+          name: order_by
+          allowEmptyValue: false
+        - schema:
+            type: string
+            enum:
+              - open
+              - closed
+              - rejected
+              - accepted
+          in: query
+          name: filter_by
+          allowEmptyValue: false
+    parameters: []
+  '/valuations/webhooks/{id}':
+    post:
+      summary: subscribe to new valuation requests
+      tags: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1sales~1webhooks~1%7Bid%7D/post/responses/201/content/application~1json/schema'
+      operationId: post-api-v1-valuations-subscribe
+      description: Subscribe to receive calls for valuations or updates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/paths/~1sales~1webhooks~1%7Bid%7D/post/requestBody/content/application~1json/schema'
+      callbacks:
+        update:
+          '{$request.body#/callbackUrl}':
+            post:
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          example: Some event happened
+                      required:
+                        - message
+              responses:
+                '200':
+                  description: Your server returns this code if it accepts the callback
+    get:
+      summary: Webhooks
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1webhooks~1%7Bid%7D/post/responses/201/content/application~1json/schema'
+      operationId: get-api-v1-valuations-subscribe
+      description: Retrieves a list of webhooks subscribed to
+    parameters:
+      - schema:
+          type: number
+        name: id
+        in: path
+        required: true
+        description: id of webhook to delete
+    delete:
+      summary: ''
+      operationId: delete-valuations-webhooks
+      responses:
+        '202':
+          description: Accepted
+  '/valuations/requests/{id}/apply':
+    parameters:
+      - schema:
+          type: number
+        name: id
+        in: path
+        required: true
+        description: valuation request id
+    post:
+      summary: Apply to given request
+      tags:
+        - valuation
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1apply/post/responses/201/content/application~1json/schema'
+      operationId: post-valuations-requests-id-apply
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1apply/post/requestBody/content/application~1json/schema'
+  '/valuations/requests/{id}/response':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Valuation responses given
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/valuation-response'
+      operationId: get-valuations-requests-id-response
+      description: |-
+        Lists all of the valuation responses given
+
+        <p>Limit pagination applies here <b>TODO</b></p>
+    post:
+      summary: Create a new valuation response
+      tags: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/valuation-response'
+      operationId: post-valuations-requests-id-response
+      description: Creates a new valuation - i.e. a response to a valuation response
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/valuation-response/allOf/1'
+  '/sales/requests/{id}/response':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Sale response given
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1response/post/responses/201/content/application~1json/schema'
+      operationId: get-sales-requests-id-response
+      description: |-
+        Lists all of the sales responses given
+
+        <p>Limit pagination applies here <b>TODO</b></p>
+    post:
+      summary: Create a new valuation response
+      tags: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                title: sale-response
+                allOf:
+                  - $ref: '#/components/schemas/valuation-response/allOf/0'
+                  - $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1response/post/requestBody/content/application~1json/schema'
+      operationId: post-sales-requests-id-response
+      description: Creates a new sale - i.e. a response to a sale request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: sale-response-data
+              type: object
+              properties:
+                date_sale_took_place:
+                  type: string
+                  format: date-time
+                sales_price:
+                  $ref: '#/components/schemas/abstract-valuation-value-time/allOf/1'
+                external_id:
+                  type: string
+                type_sale:
+                  type: string
+                  enum:
+                    - free_sale
+                    - foreclosure
+                    - auction_sale
+                    - loan sold
+                    - creditor switch
+                    - debtor revitalized
+                    - other
+                type_sale_other:
+                  type: string
+                extra_info:
+                  type: object
+                  properties:
+                    sales_person:
+                      $ref: '#/components/schemas/abstract-person-contact'
+                    sold_to:
+                      $ref: '#/components/schemas/abstract-person-contact'
+                    external_links:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          link:
+                            type: string
+                            format: uri
+              required:
+                - date_sale_took_place
+                - type_sale
+  '/sales/requests/{id}/apply':
+    parameters:
+      - schema:
+          type: number
+        name: id
+        in: path
+        required: true
+        description: valuation request id
+    post:
+      summary: Apply to given request
+      tags:
+        - valuation
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                title: request-apply-results
+                allOf:
+                  - title: abstract-request
+                    description: Represents an abstract request
+                    allOf:
+                      - type: object
+                        properties:
+                          requested_at:
+                            type: string
+                            format: date-time
+                        required:
+                          - requested_at
+                      - $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1apply/post/requestBody/content/application~1json/schema'
+                  - $ref: '#/components/schemas/valuation-response/allOf/0'
+      operationId: post-sales-requests-id-apply
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: abstract-request-status
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - open
+                    - closed
+                    - rejected
+                    - accepted
+  '/sales/webhooks/{id}':
+    post:
+      summary: subscribe to new valuation requests
+      tags: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                title: webhook
+                allOf:
+                  - type: object
+                  - $ref: '#/components/schemas/valuation-response/allOf/0'
+                  - $ref: '#/paths/~1sales~1webhooks~1%7Bid%7D/post/requestBody/content/application~1json/schema'
+                description: Represents a subscription
+      operationId: post-api-v1-sales-subscribe
+      description: Subscribe to receive calls for valuations or updates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: subscribe-input
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - requests
+                    - updates
+                url:
+                  type: string
+                  format: uri
+              required:
+                - type
+                - url
+      callbacks:
+        update:
+          '{$request.body#/callbackUrl}':
+            post:
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          example: Some event happened
+                      required:
+                        - message
+              responses:
+                '200':
+                  description: Your server returns this code if it accepts the callback
+    get:
+      summary: Webhooks
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1webhooks~1%7Bid%7D/post/responses/201/content/application~1json/schema'
+      operationId: get-api-v1-sales-subscribe
+      description: Retrieves a list of webhooks subscribed to
+    parameters:
+      - schema:
+          type: number
+        name: id
+        in: path
+        required: true
+        description: id of webhook to delete
+    delete:
+      summary: ''
+      operationId: delete-sales-webhooks
+      responses:
+        '202':
+          description: Accepted
+  /sales/requests:
+    get:
+      summary: Valuation requests
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  title: valuation-request
+                  allOf:
+                    - $ref: '#/components/schemas/valuation-response/allOf/0'
+                    - type: object
+                      properties:
+                        address:
+                          allOf:
+                            - type: object
+                              properties:
+                                country-iso2:
+                                  type: string
+                                  description: Alpha ISO-2 digit country code
+                                street:
+                                  type: string
+                                housenumber:
+                                  type: string
+                                address_extra:
+                                  type: string
+                                postal_code:
+                                  type: string
+                                city:
+                                  type: string
+                                notes_address:
+                                  type: string
+                              required:
+                                - country-iso2
+                                - street
+                                - housenumber
+                                - postal_code
+                                - city
+                            - $ref: '#/components/schemas/valuation-response/allOf/1/properties/extra_info/properties/type_property'
+                          title: ''
+                          description: Describes a property
+                        request:
+                          $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1apply/post/responses/201/content/application~1json/schema/allOf/0'
+                        extra_info:
+                          title: abstract-property-extra_inf-model
+                          type: object
+                          description: ''
+                          properties:
+                            debtor_cooperative:
+                              type: string
+                              enum:
+                                - 'yes'
+                                - 'no'
+                                - unknown
+                            authority_of_free_sale_occurred:
+                              type: boolean
+                            foreclosure:
+                              type: string
+                              enum:
+                                - 'yes'
+                                - 'no'
+                                - undecided
+                            vacancy_status:
+                              type: string
+                              enum:
+                                - owner_occupied
+                                - non_owner_occupied
+                                - unoccupied
+                            files:
+                              type: array
+                              items:
+                                title: abstract-file
+                                allOf:
+                                  - $ref: '#/components/schemas/valuation-response/allOf/0'
+                                  - type: object
+                                    properties:
+                                      content-type:
+                                        type: string
+                                      type:
+                                        type: string
+                                      description:
+                                        type: string
+                                      url:
+                                        type: string
+                                        format: uri
+                        request_history:
+                          type: array
+                          items:
+                            $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1apply/post/responses/201/content/application~1json/schema'
+                      required:
+                        - address
+                        - request
+                        - extra_info
+      operationId: get-api-v1-sales
+      description: Gets list of Valuation requests
+      parameters:
+        - schema:
+            type: number
+          in: query
+          name: since_id
+        - schema:
+            type: number
+          in: query
+          name: limit
+        - schema:
+            type: string
+            enum:
+              - '>id'
+              - <id
+              - '>created_at'
+              - <created_at
+          in: query
+          name: order_by
+          allowEmptyValue: false
+        - schema:
+            type: string
+            enum:
+              - open
+              - closed
+              - rejected
+              - accepted
+          in: query
+          name: filter_by
+          allowEmptyValue: false
+    parameters: []
+  '/sales/{id}/updates':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: valuation id that was previously subscribed to
+    get:
+      summary: Valuation comments/updates
+      tags:
+        - valuation
+      operationId: sales id
+      description: Gets a list of the updates regarding this valuation
+      parameters:
+        - schema:
+            type: number
+          in: query
+          name: since_id
+          description: Parameter to use for pagination purposes
+        - schema:
+            type: number
+          in: query
+          name: limit
+          description: 'defaults to listing 50 - maximum: 250'
+        - schema:
+            type: string
+            enum:
+              - '>id'
+              - <id
+              - '>created_at'
+              - <created_at
+          in: query
+          name: order_by
+          description: 'field to order by - default `>id` from the bigger  id to the lowest - id is assumed sequential'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1%7Bid%7D~1updates/post/responses/201/content/application~1json/schema'
+    post:
+      summary: Create new valuation comment
+      tags:
+        - valuation
+      operationId: post-sales-id-comments
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      id:
+                        type: number
+                      created_at:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - created_at
+                  - $ref: '#/paths/~1sales~1%7Bid%7D~1updates/post/requestBody/content/application~1json/schema'
+                x-examples: {}
+                description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: update-input
+              type: object
+              x-tags:
+                - update
+              properties:
+                type:
+                  type: string
+                  description: 'Type of update: e.g. `comment` `status_update` etc'
+                  enum:
+                    - comment
+                    - status_update
+                owner:
+                  type: string
+                  description: |-
+                    who created this update:
+                    `debtor` - meaning the service provider/debtor
+                    `creditor` - meaning the creditor
+                    `platform` - something done automatically by the platform - not     necessarily triggered by the creditor or debtor
+                  enum:
+                    - debtor
+                    - creditor
+                    - platform
+                value:
+                  type: string
+              required:
+                - type
+                - owner
+  '/sales/requests/{id}/person-of-interest':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      summary: Your GET endpoint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1person-of-interest/post/responses/200/content/application~1json/schema'
+      operationId: get-sales-requests-id-person-of-interest
+      description: |-
+        Gets all of the people that showed an interest
+
+        <<TODO>> add pagination
+    post:
+      summary: ''
+      operationId: post-sales-requests-id-person-of-interest
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: person-of-interest
+                allOf:
+                  - $ref: '#/components/schemas/valuation-response/allOf/0'
+                  - $ref: '#/paths/~1sales~1requests~1%7Bid%7D~1person-of-interest/post/requestBody/content/application~1json/schema'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              title: person-of-interest-data
+              allOf:
+                - properties:
+                    contact_details:
+                      $ref: '#/components/schemas/abstract-person-contact'
+                    offer:
+                      $ref: '#/components/schemas/abstract-valuation-value-time/allOf/1'
+                    offer_date:
+                      type: string
+                      format: date-time
+                    comments:
+                      type: string
+                    '':
+                      type: string
+              type: object
+          application/xml:
+            schema:
+              type: object
+              properties: {}
+        description: ''
+      description: ''
+components:
+  schemas:
+    valuation-response:
+      allOf:
+        - title: abstract-dated-model-object
+          type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            id:
+              type: number
+          required:
+            - created_at
+            - updated_at
+            - id
+        - title: valuation-response-data
+          type: object
+          properties:
+            external_id:
+              type: string
+            reported_date:
+              type: string
+              format: date-time
+            extra_info:
+              type: object
+              properties:
+                comments:
+                  type: string
+                type_property:
+                  title: abstract-property-info-type
+                  type: object
+                  properties:
+                    type_other:
+                      type: string
+                      description: Required if other is present
+                    type:
+                      type: string
+                      enum:
+                        - residential
+                        - commercial
+                        - plot
+                        - other
+                  required:
+                    - type
+                year_construction:
+                  type: number
+                year_last_renovation:
+                  type: number
+                number_floors_property:
+                  type: number
+                recommended_sales_strategy:
+                  type: string
+                notes_debtor:
+                  type: string
+                size_of_plot:
+                  type: object
+                  properties:
+                    value:
+                      type: number
+                    type:
+                      type: string
+                      enum:
+                        - sqm
+                        - sqft
+                        - other
+                    type_other:
+                      type: string
+                    comments:
+                      type: string
+                number_floors_total:
+                  type: number
+            valuator:
+              $ref: '#/components/schemas/abstract-person-contact'
+            valuations:
+              type: array
+              items:
+                $ref: '#/components/schemas/abstract-valuation-value-time'
+          required:
+            - reported_date
+      description: ''
+      title: valuation-response
+    abstract-person-contact:
+      title: abstract-person-contact
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        telephone:
+          type: string
+        external_id:
+          type: string
+      required:
+        - name
+    abstract-valuation-value-time:
+      title: abstract-valuation-value-time
+      allOf:
+        - type: object
+          properties:
+            from_date:
+              type: string
+              format: date
+            to_date:
+              type: string
+              format: date
+            type:
+              type: string
+              enum:
+                - free_sale
+                - foreclosure
+                - other
+            type_other:
+              type: string
+            comments:
+              type: string
+          required:
+            - type
+        - title: type-money
+          type: object
+          properties:
+            currency:
+              type: string
+              description: Currency ISO 4217 codetring
+            valuation:
+              type: number
+          required:
+            - currency
+            - valuation
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: basic
+    API Key - 1:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: ''
+          refreshUrl: ''
+          scopes: {}
+security:
+  - apiKey: []
