@@ -153,7 +153,8 @@ paths:
                   description: Your server returns this code if it accepts the callback
     get:
       summary: Webhooks
-      tags: []
+      tags:
+        - v1
       responses:
         '200':
           description: OK
@@ -165,6 +166,7 @@ paths:
                   $ref: '#/paths/~1sales~1webhooks~1%7Bid%7D/post/responses/201/content/application~1json/schema'
       operationId: get-api-v1-valuations-subscribe
       description: Retrieves a list of webhooks subscribed to
+      parameters: []
     parameters:
       - schema:
           type: number
